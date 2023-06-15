@@ -1,12 +1,20 @@
 import React from 'react';
+import { useState,useEffect } from 'react';
 import './App.css';
 
 export default function App() {
-  const [ownTranp,setOwn]          = React.useState<CardObj[]>([]);
-  const [oppoTranp,setOppo]        = React.useState<CardObj[]>([]);
-  const [selectOwn,setOwnSelect]   = React.useState<number[]>([]);
-  const [selectOppo,setOppoSelect] = React.useState<number[]>([]);
-  const [gameState,setGameState]   = React.useState<number>(0);
+  // 自分側のトランプ
+  const [ownTranp,setOwn]          = useState<CardObj[]>([]);
+  // 相手側のトランプ
+  const [oppoTranp,setOppo]        = useState<CardObj[]>([]);
+  // 相手がランダムに出す順番のインデックス
+  const [oppoUseIndex,setUseIndex] = useState<number[]>([]);
+  // 自分が選択した手札のインデックス
+  const [selectOwn,setOwnSelect]   = useState<number[]>([]);
+  // 相手が選択した手札のインデックス
+  const [selectOppo,setOppoSelect] = useState<number[]>([]);
+  // ゲームが何回目か
+  const [gameState,setGameState]   = useState<number>(0);
   
 
   interface CardObj {
@@ -14,6 +22,7 @@ export default function App() {
     num :string;
   }
 
+  // 絵札と数字をペアにする
   const createPea = (mark:string[],num:string[]):CardObj[] => {
     const cards:CardObj[] = [];
 
@@ -26,6 +35,8 @@ export default function App() {
     return cards;
   }
 
+  // ランダムな値の配列を作成
+  // length:配列の長さ、max:配列の最大値
   const createRandom = (length:number,max:number):number[] => {
     let randomArray:number[] = [];
 
@@ -39,6 +50,7 @@ export default function App() {
     return randomArray;
   }
 
+  // ペアの配列から自分と相手の手札を生成
   const createState = (pea:CardObj[],random:number[]):void => {
     const randomPea:CardObj[] = random.map(val => pea[val]);
     const ownArray  = randomPea.filter((val,index,array) => index < array.length / 2);
@@ -48,18 +60,33 @@ export default function App() {
     setOppo(oppoArray);
   }
 
-  const selectedTranp = (num:string,index:number,val:CardObj) => {
-    setOwnSelect([...selectOwn,index]);
-    
-    const oppoIndex = selectOppo[gameState];
-    const ownNum  = changeStringNumber(num);
-    const oppoNum = changeStringNumber(oppoTranp[oppoIndex].num);
+  // トランプをクリックした時の挙動
+  const selectedTranp = async(num:string,index:number,val:CardObj) => {    
+    const oppoIndex = oppoUseIndex[gameState];
+    const ownNum    = changeStringNumber(num);
+    const oppoNum   = changeStringNumber(oppoTranp[oppoIndex].num);
 
-    const ownObj = val;
+    const ownObj   = val;
     const oppooObj = oppoTranp[oppoIndex];
+    const ownElem  = document.querySelectorAll('.own-card-wrap .card-item')[index];
+    const oppoElem = document.querySelectorAll('.oppo-card-wrap .card-item')[oppoIndex];
 
-    console.log('あなた',ownObj,'相手',oppooObj)
+    await new Promise<string>((resolve,reject) => {
+      // アニメーション
+      battleAnimation(ownObj,oppooObj,ownElem,oppoElem,resolve)
+    })
+
+
+    console.log('あなた',ownObj,'相手',oppooObj);
+
+    await new Promise<string>((resolve,reject) => {
+      // 選択した履歴を更新
+      setOwnSelect([...selectOwn,index]);
+      setOppoSelect([...selectOppo,oppoIndex]);
+      resolve('');
+    })
     
+    // 結果
     if(ownNum > oppoNum){
       console.log('あなたの勝ち');
 
@@ -69,9 +96,34 @@ export default function App() {
     }else {
       console.log('引き分け');
     }
-    setGameState(gameState　 + 1);
+    setGameState(gameState + 1);
   }
 
+  type PromiseResolve = (value: string | PromiseLike<string>) => void;
+
+  const battleAnimation = (ownObj:CardObj,oppoObj:CardObj,ownElem:Element,oppoElem:Element,resolve:PromiseResolve):void => {
+    const addPlace = document.querySelector('.battle-field')!;
+
+    ownElem.classList.add('slide-out-own');
+
+    const elem = `
+      <div class="battle-item oppo-battle-item">${oppoObj.num}</div>
+      <div class="battle-item own-battle-item">${ownObj.num}</div>`
+
+    addPlace.innerHTML = elem;
+
+    setTimeout(() => {
+      const ownCard = document.querySelector('.own-battle-item')!;
+      const oppoCard = document.querySelector('.oppo-battle-item')!;
+      
+      ownCard.classList.add('summon-own-card');
+      oppoCard.classList.add('summon-oppo-card');
+      resolve('');
+    },200)
+
+  }
+
+  // トランプの絵札を数字に変換
   const changeStringNumber = (str:string):number => {
     let resultNum:number;
 
@@ -101,45 +153,48 @@ export default function App() {
   }
 
 
-  React.useEffect(() => {
+  useEffect(() => {
     const mark = ['♠️','♦︎','♣︎','❤︎'];
     const num  = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
     const pea    = createPea(mark,num);
     const random = createRandom(pea.length,10);
     const oppoOrder = createRandom(5,5);
-    setOppoSelect(oppoOrder);
+    setUseIndex(oppoOrder);
     createState(pea,random);
 
   },[])
 
   // console.log(ownTranp,oppoTranp)
-
   
   return (
-    <div>
-      相手
-      <ul>
-        {oppoTranp.map((val,index) => <li key={index}>{val.mark}{val.num}</li>)}
-      </ul>
-
-      自分
-      <ul>
-        {ownTranp.map((val,index) =>
-          {
-            if(selectOwn.indexOf(index) !== -1){
-              return (
-                <li key={index} className="own-tranp no-pointer" onClick={() => selectedTranp(val.num,index,val)} >{val.mark}{val.num}</li>
-              )
+    <div className="tramp-ground">
+      <div className="ground-inner">
+        <ul className="oppo-card-wrap">
+          {oppoTranp.map((val,index) => {
+            if(selectOppo.indexOf(index) !== -1){
+              return <li className="card-item no-pointer" key={index}>{/*{val.mark}*/}{val.num}</li>
 
             }else {
-              return (
-                <li key={index} className="own-tranp" onClick={() => selectedTranp(val.num,index,val)}>{val.mark}{val.num}</li>
-              )
+              return <li className="card-item" key={index}>{/*{val.mark}*/}{val.num}</li>
             }
-            
-          }
-        )}
-      </ul>
+          })}
+        </ul>
+
+        <div className="battle-field">
+          
+        </div>
+
+        <ul className="own-card-wrap">
+          {ownTranp.map((val,index) => {
+              if(selectOwn.indexOf(index) !== -1){
+                return  <li key={index} className="card-item own-tranp no-pointer" onClick={(e) => selectedTranp(val.num,index,val)} >{/*{val.mark}*/}{val.num}</li>
+
+              }else {
+                return <li key={index} className="card-item own-tranp" onClick={(e) => selectedTranp(val.num,index,val)}>{/*{val.mark}*/}{val.num}</li>
+              }
+          })}
+        </ul>
+      </div>
     </div>
   );
 }
