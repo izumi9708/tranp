@@ -164,6 +164,12 @@ export default function App() {
 
   },[])
 
+  useEffect(() => {
+    if(gameState == 5){
+      alert('終わり')
+    }
+  },[gameState])
+
   // console.log(ownTranp,oppoTranp)
   
   return (
