@@ -1,5 +1,7 @@
+import { url } from 'inspector';
 import React from 'react';
 import { useState,useEffect } from 'react';
+import { promiseHooks } from 'v8';
 import './App.css';
 
 export default function App() {
@@ -86,16 +88,12 @@ export default function App() {
       resolve('');
     })
     
-    // 結果
-    if(ownNum > oppoNum){
-      console.log('あなたの勝ち');
-
-    }else if(ownNum < oppoNum){
-      console.log('相手の勝ち')
-
-    }else {
-      console.log('引き分け');
-    }
+    await new Promise((resolve,reject) => {
+      setTimeout(() => {
+        judgeVictory(ownNum,oppoNum,resolve);
+      }, 500);
+    })
+    
     setGameState(gameState + 1);
   }
 
@@ -107,8 +105,8 @@ export default function App() {
     ownElem.classList.add('slide-out-own');
 
     const elem = `
-      <div class="battle-item oppo-battle-item">${oppoObj.num}</div>
-      <div class="battle-item own-battle-item">${ownObj.num}</div>`
+      <div class="battle-item oppo-battle-item" style="background-image:url(/card_img/${oppoObj.mark}${oppoObj.num}.svg);"></div>
+      <div class="battle-item own-battle-item" style="background-image:url(/card_img/${ownObj.mark}${ownObj.num}.svg);"></div>`
 
     addPlace.innerHTML = elem;
 
@@ -118,9 +116,34 @@ export default function App() {
       
       ownCard.classList.add('summon-own-card');
       oppoCard.classList.add('summon-oppo-card');
+
       resolve('');
     },200)
 
+  }
+
+  const judgeVictory = (ownNum:number,oppoNum:number,resolve:PromiseResolve) => {
+    const addPlace  = document.querySelector('.battle-field')!
+    const parentDiv = document.createElement('div');
+          parentDiv.classList.add('judge-place');
+
+    let judgeContent;
+
+    // 結果
+    if(ownNum > oppoNum){
+      judgeContent = '<div class="judge-content" style="color:#ffda1e;">WIN</div>';
+
+    }else if(ownNum < oppoNum){
+      judgeContent = '<div class="judge-content" style="color:#0d81e2;">LOSE</div>';
+
+    }else {
+      judgeContent = '<div class="judge-content" style="color:#ffff;">DRAW</div>';
+    }
+    
+    parentDiv.innerHTML = judgeContent;
+    addPlace.appendChild(parentDiv);
+    resolve('');
+    
   }
 
   // トランプの絵札を数字に変換
@@ -154,7 +177,7 @@ export default function App() {
 
 
   useEffect(() => {
-    const mark = ['♠️','♦︎','♣︎','❤︎'];
+    const mark = ['S','D','C','H'];
     const num  = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
     const pea    = createPea(mark,num);
     const random = createRandom(pea.length,10);
@@ -178,10 +201,22 @@ export default function App() {
         <ul className="oppo-card-wrap">
           {oppoTranp.map((val,index) => {
             if(selectOppo.indexOf(index) !== -1){
-              return <li className="card-item no-pointer" key={index}>{/*{val.mark}*/}{val.num}</li>
+              return (
+                <li className="card-item no-pointer" key={index}
+                  style={{
+                    backgroundImage:`url(/card_img/${val.mark}${val.num}.svg)`
+                  }}
+                ></li>
+              ) 
 
             }else {
-              return <li className="card-item" key={index}>{/*{val.mark}*/}{val.num}</li>
+              return (
+                <li className="card-item" key={index}
+                  style={{
+                    backgroundImage:`url(/card_img/${val.mark}${val.num}.svg)`
+                  }}
+                ></li>
+              ) 
             }
           })}
         </ul>
@@ -193,10 +228,22 @@ export default function App() {
         <ul className="own-card-wrap">
           {ownTranp.map((val,index) => {
               if(selectOwn.indexOf(index) !== -1){
-                return  <li key={index} className="card-item own-tranp no-pointer" onClick={(e) => selectedTranp(val.num,index,val)} >{/*{val.mark}*/}{val.num}</li>
+                return (
+                  <li key={index} className="card-item own-tranp no-pointer" onClick={(e) => selectedTranp(val.num,index,val)} 
+                    style={{
+                      backgroundImage:`url(/card_img/${val.mark}${val.num}.svg)`
+                    }}
+                  ></li>
+                ) 
 
               }else {
-                return <li key={index} className="card-item own-tranp" onClick={(e) => selectedTranp(val.num,index,val)}>{/*{val.mark}*/}{val.num}</li>
+                return (
+                  <li key={index} className="card-item own-tranp" onClick={(e) => selectedTranp(val.num,index,val)}
+                    style={{
+                      backgroundImage:`url(/card_img/${val.mark}${val.num}.svg)`
+                    }}
+                  ></li>
+                ) 
               }
           })}
         </ul>
