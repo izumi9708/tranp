@@ -1,8 +1,9 @@
 import { url } from 'inspector';
 import React from 'react';
 import { useState,useEffect } from 'react';
-import { promiseHooks } from 'v8';
 import './App.css';
+import Result from './Result';
+import Rule from './Rule';
 
 export default function App() {
   // 自分側のトランプ
@@ -17,6 +18,12 @@ export default function App() {
   const [selectOppo,setOppoSelect] = useState<number[]>([]);
   // ゲームが何回目か
   const [gameState,setGameState]   = useState<number>(0);
+  // ゲームの勝敗記録
+  const [gameStatus,setStatus]     = useState<string[]>([]);
+  // Resultを表示するフラグ
+  const [resultFlag,setFlag]       = useState<boolean>(false);
+  // ルール説明のモーダル
+  const [rule,setRule]             = useState<boolean>(true);
   
 
   interface CardObj {
@@ -64,6 +71,7 @@ export default function App() {
 
   // トランプをクリックした時の挙動
   const selectedTranp = async(num:string,index:number,val:CardObj) => {    
+    
     const oppoIndex = oppoUseIndex[gameState];
     const ownNum    = changeStringNumber(num);
     const oppoNum   = changeStringNumber(oppoTranp[oppoIndex].num);
@@ -91,10 +99,20 @@ export default function App() {
     await new Promise((resolve,reject) => {
       setTimeout(() => {
         judgeVictory(ownNum,oppoNum,resolve);
+
+        // setTimeout(() => {
+        //   const ownCard = document.querySelector('.own-battle-item')!;
+        //   const oppoCard = document.querySelector('.oppo-battle-item')!;
+        //   const judgePlace = document.querySelector('.judge-place')!;
+
+        //   ownCard.classList.add('summon-own-remove');
+        //   oppoCard.classList.add('summon-oppo-remove');
+        //   judgePlace.remove();
+        // }, 1500);
       }, 500);
+
+      setGameState(gameState + 1);
     })
-    
-    setGameState(gameState + 1);
   }
 
   type PromiseResolve = (value: string | PromiseLike<string>) => void;
@@ -132,12 +150,15 @@ export default function App() {
     // 結果
     if(ownNum > oppoNum){
       judgeContent = '<div class="judge-content" style="color:#ffda1e;">WIN</div>';
+      setStatus([...gameStatus,'win']);
 
     }else if(ownNum < oppoNum){
       judgeContent = '<div class="judge-content" style="color:#0d81e2;">LOSE</div>';
+      setStatus([...gameStatus,'lose']);
 
     }else {
       judgeContent = '<div class="judge-content" style="color:#ffff;">DRAW</div>';
+      setStatus([...gameStatus,'draw']);
     }
     
     parentDiv.innerHTML = judgeContent;
@@ -176,6 +197,7 @@ export default function App() {
   }
 
 
+
   useEffect(() => {
     const mark = ['S','D','C','H'];
     const num  = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
@@ -189,7 +211,11 @@ export default function App() {
 
   useEffect(() => {
     if(gameState == 5){
-      alert('終わり')
+      setTimeout(() => {
+        alert('終わり')
+        console.log(gameStatus);
+        setFlag(true);
+      },1000)
     }
   },[gameState])
 
@@ -198,38 +224,13 @@ export default function App() {
   return (
     <div className="tramp-ground">
       <div className="ground-inner">
-        <ul className="oppo-card-wrap">
-          {oppoTranp.map((val,index) => {
-            if(selectOppo.indexOf(index) !== -1){
-              return (
-                <li className="card-item no-pointer" key={index}
-                  style={{
-                    backgroundImage:`url(/card_img/${val.mark}${val.num}.svg)`
-                  }}
-                ></li>
-              ) 
 
-            }else {
-              return (
-                <li className="card-item" key={index}
-                  style={{
-                    backgroundImage:`url(/card_img/${val.mark}${val.num}.svg)`
-                  }}
-                ></li>
-              ) 
-            }
-          })}
-        </ul>
-
-        <div className="battle-field">
-          
-        </div>
-
-        <ul className="own-card-wrap">
-          {ownTranp.map((val,index) => {
-              if(selectOwn.indexOf(index) !== -1){
+        <div className='oppo-field'>
+          <ul className="oppo-card-wrap">
+            {oppoTranp.map((val,index) => {
+              if(selectOppo.indexOf(index) !== -1){
                 return (
-                  <li key={index} className="card-item own-tranp no-pointer" onClick={(e) => selectedTranp(val.num,index,val)} 
+                  <li className="card-item no-pointer" key={index}
                     style={{
                       backgroundImage:`url(/card_img/${val.mark}${val.num}.svg)`
                     }}
@@ -238,16 +239,52 @@ export default function App() {
 
               }else {
                 return (
-                  <li key={index} className="card-item own-tranp" onClick={(e) => selectedTranp(val.num,index,val)}
+                  <li className="card-item" key={index}
                     style={{
                       backgroundImage:`url(/card_img/${val.mark}${val.num}.svg)`
                     }}
                   ></li>
                 ) 
               }
-          })}
-        </ul>
+            })}
+          </ul>
+          <div className='dealer-display'>Dealer</div>
+        </div>
+
+        <div className="battle-field">
+          
+        </div>
+
+        <div className='own-field'>
+          <div className='player-display'>Player</div>
+          <ul className="own-card-wrap">
+            {ownTranp.map((val,index) => {
+                if(selectOwn.indexOf(index) !== -1){
+                  return (
+                    <li key={index} className="card-item own-tranp no-pointer" onClick={(e) => selectedTranp(val.num,index,val)} 
+                      style={{
+                        backgroundImage:`url(/card_img/${val.mark}${val.num}.svg)`
+                      }}
+                    ></li>
+                  ) 
+
+                }else {
+                  return (
+                    <li key={index} className="card-item own-tranp" onClick={(e) => selectedTranp(val.num,index,val)}
+                      style={{
+                        backgroundImage:`url(/card_img/${val.mark}${val.num}.svg)`
+                      }}
+                    ></li>
+                  ) 
+                }
+            })}
+          </ul>
+        </div>
+
       </div>
+
+      {/* {rule && <Rule/>} */}
+      {resultFlag && <Result state={gameStatus}/>}
     </div>
   );
 }
