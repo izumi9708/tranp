@@ -1,23 +1,4 @@
-html {
-  font-size: 62.5%;
-}
-body *{
-   font-size: 1.6rem;
-   box-sizing: border-box;
-   padding: 0;
-   margin: 0;
-  -webkit-overflow-scrolling: touch;
-  font-family: "MS Pゴシック" , sans-serif; ;
-}
-body {
-  margin :0;
-  height: 100vh;
-  width: 100%;
-}
-#root {
-  height: 100%;
-  background-color: #103700;
-}
+
 .tramp-ground {
   height: 100%;
   /* background-color: #398a02; */
@@ -34,7 +15,7 @@ img {
   width: 100%;
   vertical-align: bottom;
 }
-ul {
+.oppo-field ul , .own-field ul {
   width: 100%;
   display: flex;
 }

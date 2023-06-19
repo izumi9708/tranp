@@ -1,5 +1,8 @@
 import './Modal.css';
-type propsObj = {state:string[]};
+type propsObj = {
+  state:string[],
+  start:React.Dispatch<React.SetStateAction<boolean>>
+};
 
 export default function Result(props:propsObj){
   const playerWin = props.state.filter( val => val === 'win' );
@@ -29,7 +32,9 @@ export default function Result(props:propsObj){
         <p className="dealer-victory result-modal-text">Dealerの勝利：<span style={{color:'#0d81e2'}}>{dealerWin.length}</span></p>
         <p className="draw result-modal-text">引き分け：{draw.length}</p>
 
-        <button type='button' className='modal-btn'>トップへ</button>
+        <button type='button' className='modal-btn'
+          onClick={() => props.start(false)}
+        >トップへ</button>
       </div>
     </div>
   )

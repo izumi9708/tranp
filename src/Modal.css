@@ -23,8 +23,23 @@
   padding: 20px 0;
   border-radius: 10px;
 }
+.rule-modal .modal-content {
+  width: 600px;
+}
 .result-modal h2 {
   font-size: 3rem;
+}
+.rule-modal h2 {
+  font-size: 3rem;
+}
+.rule-modal ul {
+  padding-left: 20px;
+  text-align: left;
+  width: 460px;
+  margin: auto;
+}
+.rule-modal li {
+  margin-top: 20px;
 }
 .result-modal-text span {
   font-size: 2rem;
