@@ -7,7 +7,7 @@ export default function Top(props:propsObj){
     <div className="top-menu">
       <div className="top-bg"></div>
         <div className="top-inner">
-          <h1>トランプジャンケン</h1>
+          <h1><img src={`${process.env.PUBLIC_URL}/top-title.svg`}/></h1>
           <div className='top-btn-wrap'>
             <button type='button' className='top-btn'
               onClick={() => props.start(true)}
